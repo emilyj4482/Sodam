@@ -30,51 +30,72 @@ final class CoreDataManager {
     }
     
     /// context 저장 - 내부 호출
-    private func saveContext() {
-        guard context.hasChanges else { return }
+    private func saveContext() -> Result<Void, DataError> {
+        guard context.hasChanges else {
+            return .success(())
+        }
         
         do {
             try context.save()
-            print("컨텍스트 변경사항 저장 완료")
+            print("[CoreData] context 변경사항 저장 완료")
+            return .success(())
         } catch let error {
             print(DataError.contextSaveFailed.localizedDescription)
             print(error.localizedDescription)
+            return .failure(DataError.contextSaveFailed)
         }
     }
     
     /// context에 있는 모든 행담이 불러오기
-    func fetchHangdams() -> [HangdamEntity] {
+    func fetchHangdams() -> Result<[HangdamEntity], DataError> {
         let fetchRequest = NSFetchRequest<HangdamEntity>(entityName: CDKey.hangdamEntity.rawValue)
         
         do {
             let hangdams = try context.fetch(fetchRequest)
-            return hangdams
-        } catch let error {
+            return .success(hangdams)
+        } catch {
             print(DataError.fetchRequestFailed.localizedDescription)
-            print(error.localizedDescription)
-            return []
+            return .failure(DataError.fetchRequestFailed)
         }
     }
     
     /// 행담이 새로 생성 : 모든 값이 빈 값
-    func createHangdam() -> HangdamEntity {
+    func createHangdam() -> Result<HangdamEntity, DataError> {
         let entity = HangdamEntity(context: context)
-        saveContext()
-        print("[CoreData] 새로운 행담이 생성")
-        return entity
+        let saveResult = saveContext()
+        
+        switch saveResult {
+        case .success:
+            print("[CoreData] 새로운 행담이 생성")
+            return .success(entity)
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     /// 행담이 삭제 기능 아직 안 쓰지만 일단 구현함
-    private func deleteHangdam(with id: NSManagedObjectID) {
-        guard let entity = searchHangdam(with: id) else { return }
+    private func deleteHangdam(with id: NSManagedObjectID) -> Result<Void, DataError> {
+        guard let entity = searchHangdam(with: id) else {
+            return .failure(DataError.searchEntityFailed)
+        }
         context.delete(entity)
-        print("[CoreData] 행담이 삭제 완료")
-        saveContext()
+        
+        let saveResult = saveContext()
+        
+        switch saveResult {
+        case .success:
+            print("[CoreData] 행담이 삭제 완료")
+            return .success(())
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     /// 행담이 수정 : update case에 따라 특정 attribute 수정
-    func updateHangdam(with id: NSManagedObjectID, updateCase: HangdamUpdateCase) {
-        guard let entity = searchHangdam(with: id) else { return }
+    func updateHangdam(with id: NSManagedObjectID, updateCase: HangdamUpdateCase) -> Result<Void, DataError> {
+        guard let entity = searchHangdam(with: id) else {
+            return .failure(DataError.searchEntityFailed)
+        }
         
         switch updateCase {
         case .name(let name):
@@ -84,9 +105,16 @@ final class CoreDataManager {
         case .endDate(let date):
             entity.endDate = date
         }
-
-        print("[CoreData] 행담이 정보 업데이트 완료")
-        saveContext()
+        
+        let saveResult = saveContext()
+        
+        switch saveResult {
+        case .success:
+            print("[CoreData] 행담이 정보 업데이트 완료")
+            return .success(())
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     /// 행담이 검색 - 내부 호출
@@ -94,9 +122,8 @@ final class CoreDataManager {
         do {
             let hangdam = try context.existingObject(with: id) as? HangdamEntity
             return hangdam
-        } catch let error {
+        } catch {
             print(DataError.searchEntityFailed.localizedDescription)
-            print(error.localizedDescription)
             return nil
         }
     }
@@ -145,11 +172,8 @@ final class CoreDataManager {
     
     /// 행복한 기억 단일 삭제
     func deleteHappiness(with id: NSManagedObjectID) {
-//        guard let entity = searchHappiness(with: id) else { return }
-//        context.delete(entity)
-        // TODO: 기존 메서드 방식으로는 context에 변경사항이 안 생겨서 save 메서드 또한 실행이 안 되길래 제가 쓰는 방식으로 바꾸었습니다.
-        let happiness = context.object(with: id)
-        context.delete(happiness)
+        guard let entity = searchHappiness(with: id) else { return }
+        context.delete(entity)
        
         print("[CoreData] 행복 삭제 완료")
         saveContext()
@@ -168,7 +192,6 @@ final class CoreDataManager {
     }
     
     /// 행담이가 가진 현재 기억 개수 체크 - startDate, endDate 업데이트 기준으로 사용
-    // MARK: level up event 처리를 할 거라면, 이 값에 대한 observing 필요
     func checkHappinessCount(with hangdamID: NSManagedObjectID) -> Int? {
         guard let hangdam = searchHangdam(with: hangdamID) else { return nil }
         return hangdam.happinesses?.count

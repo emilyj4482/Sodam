@@ -36,7 +36,6 @@ final class HangdamRepository {
     }
     
     /// 새로운 행담이 생성
-    @discardableResult // TODO: 새로운 빈 행담이를 만드는 메서드가 행담이를 반환할 필요가 있는지 체크해주세요!
     private func createNewHangdam() -> HangdamDTO {
         return coreDataManager.createHangdam().toDTO
     }
