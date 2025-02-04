@@ -96,10 +96,46 @@ final class AlertManager {
 }
 
 extension AlertManager {
-    static func showErrorAlert(on viewController: UIViewController, message: String) {
-        let alertController = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+    static func showSimpleAlert(on viewController: UIViewController, _ alertCase: AlertCase) {
+        let alertController = UIAlertController(title: alertCase.title, message: alertCase.message, preferredStyle: .alert)
+        
         let okButton = UIAlertAction(title: "확인", style: .default)
         alertController.addAction(okButton)
-        viewController.present(alertController, animated: true)
+        
+        DispatchQueue.main.async {
+            viewController.present(alertController, animated: true, completion: alertCase.completion)
+        }
+    }
+}
+
+enum AlertCase {
+    case error(DataError)
+    case written(completion: () -> Void)
+    case imageOverload
+    case noContent
+    
+    var title: String {
+        switch self {
+        case .error: "Error"
+        case .written: "작성 완료"
+        case .imageOverload: "이미지를 추가할 수 없습니다"
+        case .noContent: "저장 불가"
+        }
+    }
+    
+    var message: String {
+        switch self {
+        case .error(let error): error.localizedDescription
+        case .written: "글이 성공적으로 작성되었습니다!"
+        case .imageOverload: "하나의 글에 최대 한 개의 이미지만 추가할 수 있습니다."
+        case .noContent: "내용을 입력해주세요!"
+        }
+    }
+    
+    var completion: (() -> Void)? {
+        switch self {
+        case .written(let completion): completion
+        default: nil
+        }
     }
 }

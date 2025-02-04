@@ -160,7 +160,7 @@ final class WriteViewController: UIViewController {
     @objc private func openCamera() {
         // 이미지 첨부 상한에 도달하면 알림 보내기(현재는 1개)
         guard writeViewModel.images.count < 1 else {
-            showAlertMaxImageLimitReached()
+            AlertManager.showSimpleAlert(on: self, .imageOverload)
             return
         }
         
@@ -182,7 +182,7 @@ final class WriteViewController: UIViewController {
     @objc private func addImage() {
         // 이미지 첨부 상한에 도달하면 알림 보내기(현재는 1개)
         guard writeViewModel.images.count < 1 else {
-            showAlertMaxImageLimitReached()
+            AlertManager.showSimpleAlert(on: self, .imageOverload)
             return
         }
         
@@ -203,11 +203,7 @@ final class WriteViewController: UIViewController {
     // 작성완료 버튼 탭할 때 호출되는 메서드
     @objc private func submitText() {
         guard !writeView.getTextViewText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            // 경고 메시지 표시
-            let alert = UIAlertController(title: "행복 기록이 없습니다", message: "내용을 입력해주세요!", preferredStyle: .alert)
-            let okAction = UIAlertAction(title: "확인", style: .default, handler: nil)
-            alert.addAction(okAction)
-            present(alert, animated: true, completion: nil)
+            AlertManager.showSimpleAlert(on: self, .noContent)
             return
         }
         
@@ -263,39 +259,6 @@ final class WriteViewController: UIViewController {
             self.present(alertControlelr, animated: true)
         }
     }
-    
-    // MARK: - Alert 메서드
-    
-    // 이미지 상한을 알리는 Alert 표시
-    private func showAlertMaxImageLimitReached() {
-        let alert = UIAlertController(
-            title: "이미지를 추가할 수 없습니다.",
-            message: "하나의 글에 최대 한 개의 이미지만 추가할 수 있습니다.",
-            preferredStyle: .alert
-        )
-        let okAction = UIAlertAction(title: "확인", style: .default) { _ in
-            alert.dismiss(animated: true, completion: nil)
-        }
-        alert.addAction(okAction)
-        DispatchQueue.main.async {
-            self.present(alert, animated: true)
-        }
-    }
-    
-    // 작성 완료 Alert
-    private func showCompletionAlert(completion: @escaping () -> Void) {
-        let alert = UIAlertController(
-            title: "작성 완료",
-            message: "글이 성공적으로 작성되었습니다!",
-            preferredStyle: .alert
-        )
-        let okAction = UIAlertAction(title: "확인", style: .default) { _ in
-            alert.dismiss(animated: true, completion: completion)
-        }
-        alert.addAction(okAction)
-        present(alert, animated: true, completion: nil)
-    }
-
 }
 
 // MARK: - 컬렉션뷰 DataSource 설정
