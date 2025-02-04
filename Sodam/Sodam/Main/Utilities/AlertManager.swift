@@ -20,7 +20,7 @@ final class AlertManager {
     }
     
     // 이름 입력 알림창
-    static func showAlert(
+    static func showNamingAlert(
         on viewController: UIViewController,
         completion: @escaping (String?) -> Void
     ) {

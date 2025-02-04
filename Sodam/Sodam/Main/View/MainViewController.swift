@@ -129,7 +129,7 @@ final class MainViewController: UIViewController {
             proceedWithWriting()
         } else {
             // 저장된 이름이 없는 경우 알림창 표시
-            AlertManager.showAlert(on: self) { [weak self] name in
+            AlertManager.showNamingAlert(on: self) { [weak self] name in
                 guard let self = self,
                       let name = name,
                       !name.isEmpty
