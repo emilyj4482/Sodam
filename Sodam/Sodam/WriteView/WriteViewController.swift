@@ -207,13 +207,16 @@ final class WriteViewController: UIViewController {
             return
         }
         
-        // 작성 완료 알림 표시
-        showCompletionAlert {
-            // WriteViewModel에 작성 완료 이벤트 전달
-            self.writeViewModel.submitPost {
-                // 모달 닫기
+        // 행복 생성 성공 여부에 따라 분기 처리
+        let submitResult = writeViewModel.submitPost()
+        // 성공 시 작성 완료 alert 표시, 실패 시 에서 alert 표시
+        switch submitResult {
+        case .success:
+            AlertManager.showSimpleAlert(on: self, .written(completion: {
                 self.dismiss(animated: true, completion: nil)
-            }
+            }))
+        case .failure(let error):
+            AlertManager.showSimpleAlert(on: self, .error(error))
         }
     }
     

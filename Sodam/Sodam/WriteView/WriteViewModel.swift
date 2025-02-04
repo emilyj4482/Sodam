@@ -53,17 +53,22 @@ final class WriteViewModel: NSObject {
     }
     
     // 작성 완료 이벤트 처리
-    func submitPost(completion: @escaping () -> Void) {
+    func submitPost() -> Result<Void, DataError> {
         let imagePaths = saveImages(writeModel.post.images)
         
         let newHappiness: HappinessDTO = HappinessDTO(content: text, date: Date.now, imagePaths: imagePaths, hangdamID: currentHangdamID)
-        happinessRepository.createHappiness(newHappiness)
         
-        isPostSubmitted = true
-        // post 초기화
-        writeModel.resetPost()
-        // 작성 완료 알림 표시 후 모달 닫기
-        completion()
+        let createResult = happinessRepository.createHappiness(newHappiness)
+        
+        switch createResult {
+        case .success:
+            isPostSubmitted = true
+            // post 초기화
+            writeModel.resetPost()
+            return .success(())
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     // 작성 취소 이벤트 처리
@@ -187,7 +192,6 @@ extension WriteViewModel {
         }
     }
 }
-
 
 // MARK: - PHPickerViewController(이미지 선택할 때 사용) 설정
 
