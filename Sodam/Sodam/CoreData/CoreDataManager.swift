@@ -39,9 +39,8 @@ final class CoreDataManager {
             try context.save()
             print("[CoreData] context 변경사항 저장 완료")
             return .success(())
-        } catch let error {
+        } catch {
             print(DataError.contextSaveFailed.localizedDescription)
-            print(error.localizedDescription)
             return .failure(DataError.contextSaveFailed)
         }
     }
@@ -62,6 +61,7 @@ final class CoreDataManager {
     /// 행담이 새로 생성 : 모든 값이 빈 값
     func createHangdam() -> Result<HangdamEntity, DataError> {
         let entity = HangdamEntity(context: context)
+        
         let saveResult = saveContext()
         
         switch saveResult {
@@ -129,11 +129,11 @@ final class CoreDataManager {
     }
     
     /// 행복한 기억 생성 : 행담이 id 받아 행담이에 추가
-    func createHappiness(_ dto: HappinessDTO, to hangdamID: NSManagedObjectID) {
+    func createHappiness(_ dto: HappinessDTO, to hangdamID: NSManagedObjectID) -> Result<Void, DataError> {
         guard let data = try? NSKeyedArchiver.archivedData(withRootObject: dto.imagePaths, requiringSecureCoding: true)
         else {
             print(DataError.convertImagePathsFailed.localizedDescription)
-            return
+            return .failure(DataError.convertImagePathsFailed)
         }
         
         let entity = HappinessEntity(context: context)
@@ -142,41 +142,60 @@ final class CoreDataManager {
         entity.imagePaths = data
         
         /// 행담이에 추가
-        appendHappiness(entity, to: hangdamID)
-        
-        print("[CoreData] 행복 생성 완료")
-        saveContext()
+        do {
+            try appendHappiness(entity, to: hangdamID)
+            
+            let saveResult = saveContext()
+            
+            switch saveResult {
+            case .success:
+                print("[CoreData] 행복 생성 완료")
+                return .success(())
+            case .failure(let error):
+                return .failure(error)
+            }
+        } catch {
+            return .failure(DataError.searchEntityFailed)
+        }
     }
     
     /// 행복한 기억을 행담이에 추가하는 메소드 - 내부 호출
-    private func appendHappiness(_ entity: HappinessEntity, to hangamID: NSManagedObjectID) {
+    private func appendHappiness(_ entity: HappinessEntity, to hangamID: NSManagedObjectID) throws {
         guard let hangdam = searchHangdam(with: hangamID)
         else {
-            print(DataError.searchEntityFailed.localizedDescription)
-            return
+            throw DataError.searchEntityFailed
         }
         
         hangdam.addToHappinesses(entity)
     }
     
     /// 행담이가 갖고 있는 행복한 기억들 호출
-    func getHappinesses(of hangdamID: NSManagedObjectID) -> [HappinessEntity]? {
+    func getHappinesses(of hangdamID: NSManagedObjectID) throws -> [HappinessEntity]? {
         guard let hangdam = searchHangdam(with: hangdamID)
         else {
             print(DataError.searchEntityFailed.localizedDescription)
-            return nil
+            throw DataError.searchEntityFailed
         }
         
         return hangdam.happinesses?.array as? [HappinessEntity]
     }
     
     /// 행복한 기억 단일 삭제
-    func deleteHappiness(with id: NSManagedObjectID) {
-        guard let entity = searchHappiness(with: id) else { return }
+    func deleteHappiness(with id: NSManagedObjectID) -> Result<Void, DataError> {
+        guard let entity = searchHappiness(with: id) else {
+            return .failure(DataError.searchEntityFailed)
+        }
         context.delete(entity)
-       
-        print("[CoreData] 행복 삭제 완료")
-        saveContext()
+        
+        let saveResult = saveContext()
+        
+        switch saveResult {
+        case .success:
+            print("[CoreData] 행복 삭제 완료")
+            return .success(())
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     /// 행복한 기억 검색 - 내부 호출
@@ -184,9 +203,8 @@ final class CoreDataManager {
         do {
             let happiness = try context.existingObject(with: id) as? HappinessEntity
             return happiness
-        } catch let error {
+        } catch {
             print(DataError.searchEntityFailed.localizedDescription)
-            print(error.localizedDescription)
             return nil
         }
     }
