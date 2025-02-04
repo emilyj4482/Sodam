@@ -15,13 +15,17 @@ struct HangdamDTO {
     var endDate: String?
     
     var level: Int {
-        switch happinessCount {
-        case 1...3: return 1    // 애기담이 : 3개 작성 필요
-        case 4...10: return 2   // 초딩담이 : 7개 작성 필요
-        case 11...24: return 3  // 중딩담이 : 14개 작성 필요
-        case 25...29: return 4  // 킹담이 : 5개 작성해야 성장 완료
-        case 30: return 5       // 성장완료 보관 ㄱ
-        default: return 0       // 알담이 : 1개 작성 필요
+        if endDate != nil {
+            return 5
+        } else {
+            switch happinessCount {
+            case 1...3: return 1    // 애기담이 : 3개 작성 필요
+            case 4...10: return 2   // 초딩담이 : 7개 작성 필요
+            case 11...24: return 3  // 중딩담이 : 14개 작성 필요
+            case 25...29: return 4  // 킹담이 : 5개 작성해야 성장 완료
+            case 30: return 5       // 성장완료 보관 ㄱ
+            default: return 0       // 알담이 : 1개 작성 필요
+            }
         }
     }
     

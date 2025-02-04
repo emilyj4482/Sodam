@@ -6,13 +6,17 @@
 //
 
 import Foundation
+import UIKit
 
 /// CoreDataManager와 ViewModel 사이에서 행복한 기억 데이터 처리를 맡는 객체
 final class HappinessRepository {
     private let coreDataManager: CoreDataManager
+    private let imageManager: ImageManager
     
-    init(coreDataManager: CoreDataManager = CoreDataManager.shared) {
+    // 
+    init(coreDataManager: CoreDataManager = CoreDataManager.shared, imageManager: ImageManager = ImageManager()) {
         self.coreDataManager = coreDataManager
+        self.imageManager = imageManager
     }
     
     /// 행복한 기억 생성
@@ -65,10 +69,22 @@ final class HappinessRepository {
     }
     
     /// 기억 삭제
-    func deleteHappiness(with id: String) {
+    func deleteHappiness(with id: String?, path: String?) {
         guard let id = IDConverter.toNSManagedObjectID(from: id, in: coreDataManager.context) else { return }
-        
         coreDataManager.deleteHappiness(with: id)
+        print("[HappinessRepository] deleteHappiness - 행복 삭제 완료")
+        
+        guard let path = path else { return }
+        imageManager.deleteImage(path)
+        print("[HappinessRepository] deleteHappiness - 이미지 삭제 완료")
+    }
+    
+    func getThumbnailImage(from path: String) -> UIImage {
+        return imageManager.getThumbnailImage(with: path)
+    }
+    
+    func getContentImage(from path: String) -> UIImage? {
+        return imageManager.getImage(with: path)
     }
 }
 

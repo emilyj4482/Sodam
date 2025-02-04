@@ -9,39 +9,72 @@ import SwiftUI
 
 struct HappinessDetailView: View {
     
-    var viewModel: HappinessDetailViewModel
+    let viewModel: HappinessDetailViewModel
     @State private var isAlertPresented: Bool = false
+    let isCanDelete: Bool
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        ScrollView {
-            VStack {
-                if let imagePath = viewModel.happiness.imagePaths.first {
-                    // TODO: 이미지 호출하여 뷰로 구성하는 메서드 필요,
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.primary)
-                        .frame(width: 200, height: 200)
+        NavigationStack{
+            ScrollView {
+                VStack {
+                    if let imagePath = viewModel.happiness.imagePaths.first {
+                        Image(uiImage: self.viewModel.getImage(from: imagePath))
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(.rect(cornerRadius: 15))
+                            .padding()
+                            .background(RoundedRectangle(cornerRadius: 15).foregroundStyle(Color.cellBackground))
+                            .padding(.bottom)
+                    }
+                    HStack(alignment: .top) {
+                        Text(viewModel.happiness.content)
+                            .font(.maruburiot(type: .regular, size: 16))
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal, 16)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                
-                Text(viewModel.happiness.content)
-                    .padding()
             }
             .frame(maxWidth: .infinity)
+            .background(Color.viewBackground)
+            .padding()
         }
-        .padding()
-        .navigationTitle(viewModel.happiness.date.toFormattedString)
+        .background(Color.viewBackground.ignoresSafeArea())
+        .ignoresSafeArea(edges: .bottom)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button( action: {
-                    isAlertPresented = true
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: {
+                    dismiss()
                 }) {
-                    Image(systemName: "trash")
-                        .foregroundStyle(.gray)
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("기억들")
+                            .font(.maruburiot(type: .bold, size: 16))
+                            .foregroundStyle(Color.textAccent)
+                    }
+                }
+            }
+            
+            ToolbarItem(placement: .principal) {
+                Text(viewModel.happiness.date.toFormattedString)
+                    .font(.maruburiot(type: .bold, size: 20))
+                    .foregroundStyle(Color.textAccent)
+            }
+            if isCanDelete {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button( action: {
+                        isAlertPresented = true
+                    }) {
+                        Image(systemName: "trash")
+                            .foregroundStyle(.gray)
+                    }
                 }
             }
         }
-        .background(Color.viewBackground)
+        
         .alert("정말 삭제하시겠습니까?", isPresented: $isAlertPresented) {
             Button("취소", role: .cancel) { }
             Button("삭제", role: .destructive) {
@@ -51,24 +84,10 @@ struct HappinessDetailView: View {
         } message: {
             Text("삭제한 행복은 되돌릴 수 없습니다.")
         }
-        //        .sheet(isPresented: $isAlertPresented) {
-        //            CustomAlertRepresentable(
-        //                alertBuilder: CustomAlertBuilder()
-        //                    .setTitle(to: "you real?")
-        //                    .setMessage(to: "you can't undo")
-        //                    .setBackground(color: .cellBackground)
-        //                    .setAlertFont(font: .gowunBatang(type: .regular, size: 16))
-        //                    .setTitleColor(to: .textAccent)
-        //                    .setMessageFontColor(to: .darkGray)
-        //                    .addAction(title: "확인", style: .onlyYes) { _ in }
-        //                    .addAction(title: "취소", style: .canCancle) { _ in }
-        //            )
-        //        }
     }
     
 }
 
 #Preview {
-//    HappinessDetailView(viewModel: HappinessDetailViewModel())
 }
 

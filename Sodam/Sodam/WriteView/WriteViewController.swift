@@ -15,7 +15,6 @@ protocol WriteViewControllerDelegate: AnyObject {
 final class WriteViewController: UIViewController {
     
     weak var delegate: WriteViewControllerDelegate?
-    var hangdamName: String?
     
     private let writeViewModel: WriteViewModel
     private let writeView = WriteView()
@@ -27,9 +26,7 @@ final class WriteViewController: UIViewController {
     }
     
     required init?(coder: NSCoder) {
-        let writeModel = WriteModel()
-        self.writeViewModel = WriteViewModel(writeModel: writeModel, hangdamID: "")
-        super.init(coder: coder)
+        fatalError("init(coder:) has not been implemented")
     }
     
     // MARK: - 뷰 생명주기
@@ -41,6 +38,8 @@ final class WriteViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        print("viewDidAppear 동작함")
         
         // 임시 저장글 있는지 확인하고 로드
         writeViewModel.loadTemporaryPost()
@@ -69,14 +68,19 @@ final class WriteViewController: UIViewController {
     // 모달 dismiss 될 때 호출될 메서드
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        print("viewWillDisappear 동작함")
+        
+        // 현재 텍스트 저장
+        writeViewModel.saveTemporaryPost()
+        
         // 뷰가 닫힐 때 delegate 호출하기
         if self.isBeingDismissed {
             if writeViewModel.isPostSubmitted {
-                print("viewWillDisappear 동작. CoreData에 저장됨.")
+                print("[viewWillDisappear] CoreData에 저장됨.")
                 // 작성 완료시 UserDefaults에 임시 저장된 글 삭제
                 UserDefaultsManager.shared.deleteTemporaryPost()
             } else {
-                print("viewWillDisappear. UserDefaults에 저장됨.")
+                print("[viewWillDisappear] UserDefaults에 저장됨.")
                 // 작성 취소 시 임시 저장
                 writeViewModel.saveTemporaryPost()
             }
@@ -101,6 +105,12 @@ final class WriteViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
+    // 키보드 내리기 구현
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        self.view.endEditing(true) // 키보드 내리기
+    }
+    
     // 키보드 나타날 때 호출되는 메서드
     @objc private func keyboardWillShow(_ notification: Notification) {
         guard let userInfo = notification.userInfo, // 키보드가 나타날 때 프레임 및 애니메이션 시간 정보 저장
@@ -109,12 +119,12 @@ final class WriteViewController: UIViewController {
             return
         }
         
-        // 화면 높이 기준으로 키보드 높이 비율 계산
-        let screenHeight = view.bounds.height
-        let keyboardHeightRatio = keyboardFrame.height / screenHeight
+        // 키보드 높이를 기준으로 inset 설정
+        let keyboardHeight = keyboardFrame.height
+        let safeAreaBottomInset = view.safeAreaInsets.bottom
 
         // 동적으로 계산된 inset 적용
-        let inset = view.safeAreaLayoutGuide.layoutFrame.height * keyboardHeightRatio
+        let inset = keyboardHeight - safeAreaBottomInset
         writeView.updateContainerBottomConstraint(inset: inset)
         
         // 업데이트 된 레이아웃 반영
@@ -192,6 +202,15 @@ final class WriteViewController: UIViewController {
     
     // 작성완료 버튼 탭할 때 호출되는 메서드
     @objc private func submitText() {
+        guard !writeView.getTextViewText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            // 경고 메시지 표시
+            let alert = UIAlertController(title: "행복 기록이 없습니다", message: "내용을 입력해주세요!", preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "확인", style: .default, handler: nil)
+            alert.addAction(okAction)
+            present(alert, animated: true, completion: nil)
+            return
+        }
+        
         // 작성 완료 알림 표시
         showCompletionAlert {
             // WriteViewModel에 작성 완료 이벤트 전달

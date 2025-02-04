@@ -36,12 +36,25 @@ struct HangdamStorageView: View {
                             .padding(.horizontal, 12)
                             .background(Capsule().fill(Color.buttonBackground))
                     }
-                    
-                    ScrollView {
-                        HangdamGridView(hangdamList: $viewModel.storedHangdamList)
-                            .padding(.bottom)
+                    if $viewModel.storedHangdamList.wrappedValue.count == 0 {
+                        VStack(alignment: .center) {
+                            Spacer()
+                            Text("행담이에게 행복을 주고 성장시켜보세요!")
+                                .frame(maxWidth: .infinity, maxHeight: 35, alignment: .leading)
+                                .font(.mapoGoldenPier(24))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                                .foregroundStyle(Color.gray)
+                                .padding(.vertical, 8)
+                            Spacer()
+                        }
+                    } else {
+                        ScrollView {
+                            HangdamGridView(hangdamList: $viewModel.storedHangdamList)
+                                .padding(.bottom)
+                        }
+                        .scrollIndicators(.hidden)
                     }
-                    .scrollIndicators(.hidden)
                 }
                 .padding(.top)
                 .padding(.horizontal)

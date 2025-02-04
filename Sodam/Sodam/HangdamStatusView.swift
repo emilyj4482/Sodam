@@ -29,16 +29,17 @@ struct HangdamStatusView: View {
                 Text("Lv.\(hangdam.level) \(hangdam.levelName)")
                     .font(.maruburiot(type: .semiBold, size: 17))
                 if let startDate = hangdam.startDate {
-                    Text("\(startDate) ~")
+                    Text("\(startDate) ~ \(hangdam.endDate ?? "")")
                         .font(.maruburiot(type: .regular, size: 16))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
                 } else {
                     Text("")
                 }
-                
             }
             .foregroundStyle(Color(uiColor: .white))
         }
-        .padding(16)
+        .padding(20)
         .frame(height: size.height / 4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.tabBackground)

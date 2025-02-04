@@ -160,7 +160,7 @@ class WriteView: UIView {
         
         dismisslButton.snp.makeConstraints { make in
             make.centerY.equalTo(dateLabel.snp.centerY)
-            make.width.height.equalTo(safeAreaLayoutGuide.snp.width).multipliedBy(0.1)
+            make.width.height.equalTo(36)
             make.trailing.equalTo(safeAreaLayoutGuide.snp.trailing).offset(-20)
         }
         
@@ -187,23 +187,20 @@ class WriteView: UIView {
         }
         
         cameraButton.snp.makeConstraints { make in
-            make.top.equalTo(collectionView.snp.bottom).offset(10)
             make.bottom.equalTo(containerView.snp.bottom)
-            make.width.equalTo(cameraButton.snp.height)
+            make.width.height.equalTo(36)
             make.leading.equalTo(textView.snp.leading)
         }
         
         imageButton.snp.makeConstraints { make in
-            make.top.equalTo(cameraButton.snp.top)
             make.centerY.equalTo(cameraButton)
-            make.width.equalTo(imageButton.snp.height)
-            make.leading.equalTo(cameraButton.snp.trailing).offset(10)
+            make.width.height.equalTo(36)
+            make.leading.equalTo(cameraButton.snp.trailing).offset(16)
         }
         
         submitButton.snp.makeConstraints { make in
-            make.top.equalTo(cameraButton.snp.top)
             make.centerY.equalTo(cameraButton)
-            make.width.equalTo(submitButton.snp.height)
+            make.width.height.equalTo(36)
             make.trailing.equalTo(textView.snp.trailing)
         }
     }
@@ -229,6 +226,12 @@ class WriteView: UIView {
         textView.text = text
         updatePlaceholderVisibility() // 텍스트 변경 시 Placeholder 업데이트
     }
+    
+    // 텍스트뷰 내용 접근 메서드
+    func getTextViewText() -> String {
+        return textView.text
+    }
+    
     // placeholder 숨김처리 메서드
     private func updatePlaceholderVisibility() {
         placeholderLabel.isHidden = !textView.text.isEmpty

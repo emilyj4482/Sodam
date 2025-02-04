@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 final class HappinessListViewModel: ObservableObject {
     @Published var hangdam: HangdamDTO
@@ -22,21 +23,16 @@ final class HappinessListViewModel: ObservableObject {
     
     func reloadData() {
         let newHappinesslist = happinessRepository.getHappinesses(of: hangdam.id)
-        DispatchQueue.main.async {
-            self.happinessList = newHappinesslist
-        }
-        print("1차 리로드")
-        for happiness in happinessList ?? [] {
-            print(happiness.content)
-        }
-        
-        print("2차 리로드")
-        for happiness in happinessList ?? [] {
-            print(happiness.content)
-        }
-        
-        // TODO: Store에 다녀오기 전까지 Repository에서 가져오는 것에도 반영이 안 됨.
-        print("reload 완료")
+        self.happinessList = newHappinesslist
+        print("[HappinessListViewModel] reloadeData 리로드")
+    }
+    
+    func getHappinessRepository() -> HappinessRepository {
+        return self.happinessRepository
+    }
+    
+    func getThumnail(from path: String) -> UIImage {
+        return self.happinessRepository.getThumbnailImage(from: path)
     }
 }
 

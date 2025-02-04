@@ -31,7 +31,7 @@ fileprivate struct HangdamGrid: View {
             HappinessListView(hangdam: hangdam)
         } label: {
             VStack(spacing: 1) {
-                Image(.kingdam1)
+                Image(.level4)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .background(Color.imageBackground)
@@ -46,12 +46,14 @@ fileprivate struct HangdamGrid: View {
                         Text("\(startDate) ~ \(endDate)")
                             .font(.maruburiot(type: .regular, size: 13))
                             .foregroundStyle(Color(uiColor: .gray))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
                     } else {
                         Text("")
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding([.leading, .bottom])
+                .padding([.horizontal, .bottom])
             }
             .background(Color.cellBackground)
             .clipShape(.rect(cornerRadius: 15))

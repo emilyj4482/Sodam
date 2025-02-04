@@ -93,7 +93,7 @@ final class MainView: UIView {
         }
         
         createbutton.snp.makeConstraints {
-            $0.bottom.equalTo(safeAreaLayoutGuide.snp.bottom).inset(50)
+            $0.bottom.equalTo(safeAreaLayoutGuide.snp.bottom).inset(40) // se에서 글자 겹쳐서 탭바사이 간격 좀 줄임
             $0.centerX.equalToSuperview()
             $0.height.equalTo(60)
             $0.width.equalToSuperview().multipliedBy(0.85)
@@ -117,6 +117,8 @@ final class MainView: UIView {
             nameLabel.isHidden = false
         } else {
             nameLabel.isHidden = true
+            nameLabel.text = "이름을 지어주세요"
+            nameLabel.isHidden = false
         }
     }
     

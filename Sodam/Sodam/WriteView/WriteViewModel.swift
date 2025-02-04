@@ -19,13 +19,13 @@ final class WriteViewModel: NSObject {
     
     var isPostSubmitted: Bool = false // 작성 완료, 임시 저장 구분하기 위한 Bool 타입 변수. 첫 작성을 고려하여 초기값은 false
     
-    init(writeModel: WriteModel,
+    init(writeModel: WriteModel = .init(),
          repository: HappinessRepository = HappinessRepository(),
-         hangdamID: String
+         currentHangdamID: String
     ) {
         self.writeModel = writeModel
         self.happinessRepository = repository
-        self.currentHangdamID = hangdamID
+        self.currentHangdamID = currentHangdamID
         super.init()
     }
     
