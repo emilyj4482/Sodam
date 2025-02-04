@@ -65,7 +65,7 @@ final class MainViewController: UIViewController {
             .sink { [weak self] error in
                 guard let self = self,
                       let error = error else { return }
-                AlertManager.showErrorAlert(on: self, message: error.alertDescription)
+                AlertManager.showSimpleAlert(on: self, .error(error))
             }
             .store(in: &cancellables)
         
@@ -146,7 +146,7 @@ final class MainViewController: UIViewController {
                     print("입력 된 이름: \(name)")
                     self.proceedWithWriting()
                 case .failure(let error):
-                    AlertManager.showErrorAlert(on: self, message: error.alertDescription)
+                    AlertManager.showSimpleAlert(on: self, .error(error))
                 }
             }
         }
