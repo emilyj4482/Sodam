@@ -95,3 +95,11 @@ final class AlertManager {
     }
 }
 
+extension AlertManager {
+    static func showErrorAlert(on viewController: UIViewController, message: String) {
+        let alertController = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        let okButton = UIAlertAction(title: "확인", style: .default)
+        alertController.addAction(okButton)
+        viewController.present(alertController, animated: true)
+    }
+}

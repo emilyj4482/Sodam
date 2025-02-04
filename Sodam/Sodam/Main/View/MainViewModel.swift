@@ -11,8 +11,10 @@ import Combine
 /// MainView의 상태와 로직을 관리하는 ViewModel.
 /// HangdamRepository와 상호작용해서 데이터를 관리하고 Published 속성을 통해서 UI를 업데이트 함.
 final class MainViewModel: ObservableObject {
-    @Published var hangdam: HangdamDTO // 현재 관리할 행담이 데이터
-    @Published var message: String = "" // 화면에 표시할 메시지
+    
+    @Published var hangdam: HangdamDTO?     // 현재 키우고 있는 행담이
+    @Published var message: String = ""     // 화면에 표시할 메시지
+    @Published var error: DataError?        // error를 전달 받을 변수(이벤트 처리를 위함)
     
     /// 메시지 분기를 위한 플래그 변수
     private var showLevel5Message: Bool = false
@@ -22,26 +24,36 @@ final class MainViewModel: ObservableObject {
     private let hangdamRepository: HangdamRepository
     
     init(repository: HangdamRepository) {
-    /// 뷰모델 초기화 메서드
         self.hangdamRepository = repository
-        self.hangdam = repository.getCurrentHangdam() // 현재 행담이 데이터를 레포지토리에서 가져옴
-        self.updateMessage() // 초기화 시 메세지 업데이트
+        self.reloadHangdam()
+        self.updateMessage()
         
         // 행담이 레벨업 할때마다 특정 메시지를 보여주기 위해 observing
         NotificationCenter.default.addObserver(self, selector: #selector(updateMessageWhenLevelUp), name: Notification.levelUP, object: nil)
     }
     
     /// 새로운 이름을 현재 행담이에 저장
-    func saveNewName(as name: String) {
-        hangdamRepository.nameHangdam(id: hangdam.id, name: name)
-        reloadHangdam()
+    func saveNewName(as name: String) -> Result<Void, DataError> {
+        guard let hangdamID = hangdam?.id else {
+            return .failure(DataError.noData)
+        }
+        
+        let nameResult = hangdamRepository.nameHangdam(id: hangdamID, name: name)
+        
+        switch nameResult {
+        case .success:
+            reloadHangdam()
+            return .success(())
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     /// 플래그 변수와 이름이 없는 경우를 검사 후 메시지 업데이트
     func updateMessage() {
         if showLevel5Message {
             showLevel5Message = false
-        } else if hangdam.name == nil {
+        } else if hangdam?.name == nil {
             message = MainMessages.firstMessage
         } else if blockRandomMessage {
             blockRandomMessage = false
@@ -52,7 +64,14 @@ final class MainViewModel: ObservableObject {
     
     /// 레포지토리에서 현재 행담이 데이터를 다시 불러옴
     func reloadHangdam() {
-        self.hangdam = hangdamRepository.getCurrentHangdam()
+        let fetchResult = hangdamRepository.getCurrentHangdam()
+        
+        switch fetchResult {
+        case .success(let hangdam):
+            self.hangdam = hangdam
+        case .failure(let error):
+            self.error = error
+        }
     }
     
     // MARK: - TodayWriteUserDefaults(테스트 하는 동안 주석처리)
@@ -73,7 +92,7 @@ final class MainViewModel: ObservableObject {
     
     /// 행담이가 레벨업 할 때 메세지를 업데이트 함
     /// `levelUP` 알림(Notification)을 통해 호출됨
-    @objc func updateMessageWhenLevelUp(notification: Notification) {
+    @objc private func updateMessageWhenLevelUp(notification: Notification) {
         guard let userInfo = notification.userInfo,
               let level = userInfo["level"] as? Int
         else { return }
@@ -82,7 +101,7 @@ final class MainViewModel: ObservableObject {
         print("행담이 레벨 \(level)로 성장함")
         
         // message update
-        message = MainMessages.messageForLevel(level, name: hangdam.name ?? "행담이")
+        message = MainMessages.messageForLevel(level, name: hangdam?.name ?? "행담이")
         
         // write view modal이 닫히면서 random message로 덮이지 않도록 플래그 처리
         blockRandomMessage = true

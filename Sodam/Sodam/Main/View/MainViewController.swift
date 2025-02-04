@@ -53,8 +53,19 @@ final class MainViewController: UIViewController {
         viewModel.$hangdam
             .receive(on: RunLoop.main)
             .sink { [weak self] hangdam in
-                self?.mainView.updateNameLabel(hangdam.name) // 이름 설정
-                self?.mainView.updateGif(with: "phase\(hangdam.level)") // 레벨에 따른 GIF 업데이트
+                guard let self = self,
+                      let hangdam = hangdam else { return }
+                self.mainView.updateNameLabel(hangdam.name)            // 이름 설정
+                self.mainView.updateGif(with: "phase\(hangdam.level)") // 레벨에 따른 GIF 업데이트
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$error
+            .receive(on: RunLoop.main)
+            .sink { [weak self] error in
+                guard let self = self,
+                      let error = error else { return }
+                AlertManager.showErrorAlert(on: self, message: error.alertDescription)
             }
             .store(in: &cancellables)
         
@@ -91,8 +102,10 @@ final class MainViewController: UIViewController {
     // MARK: - Modal Handling
     
     // 작성화면 모달 띄우는 메서드
-    private func modalWriteViewController(with name: String) {
-        let writeViewController = WriteViewController(writeViewModel: .init(currentHangdamID: viewModel.hangdam.id))
+    private func modalWriteViewController() {
+        guard let hangdam = viewModel.hangdam else { return }
+        
+        let writeViewController = WriteViewController(writeViewModel: .init(currentHangdamID: hangdam.id))
         writeViewController.delegate = self                                     // Delegate 연결
         writeViewController.modalTransitionStyle = .coverVertical               // 모달 스타일 설정
         present(writeViewController, animated: true)                            // 모달 표시
@@ -111,10 +124,9 @@ final class MainViewController: UIViewController {
 //            present(alert, animated: true, completion: nil)
 //            return
 //        }
-        if let name = viewModel.hangdam.name {
+        if let name = viewModel.hangdam?.name {
             // 이미 저장된 이름이 있는 경우에 바로 작성화면으로 이동
-            print("저장된 이름으로 작성화면 이동함: \(name)")
-            proceedWithWriting(name: name)
+            proceedWithWriting()
         } else {
             // 저장된 이름이 없는 경우 알림창 표시
             AlertManager.showAlert(on: self) { [weak self] name in
@@ -125,18 +137,26 @@ final class MainViewController: UIViewController {
                     print("이름이 입력되지 않았습니다.")
                     return
                 }
-                viewModel.saveNewName(as: name) // 새 이름 저장
-                print("입력 된 이름: \(name)")
-                self.proceedWithWriting(name: name)
+                
+                // 새 이름 저장 시도 : 성공 시 write view modal present, 실패 시 error alert present
+                let saveResult = viewModel.saveNewName(as: name) // 새 이름 저장
+                
+                switch saveResult {
+                case .success:
+                    print("입력 된 이름: \(name)")
+                    self.proceedWithWriting()
+                case .failure(let error):
+                    AlertManager.showErrorAlert(on: self, message: error.alertDescription)
+                }
             }
         }
     }
     
     /// 작성화면으로 이동 후 작성완료 상태를 저장하고 버튼 상태를 갱신하는 메서드
-    private func proceedWithWriting(name: String) {
-        modalWriteViewController(with: name)         // 작성화면으로 이동
-//        viewModel.markAsWrittenToday()               // 오늘 작성 했음을 기록
-//        updateButtonState()                          // 버튼 상태 갱신(작성 완료 시 비활성화됨)
+    private func proceedWithWriting() {
+        modalWriteViewController()                  // 작성화면으로 이동
+//        viewModel.markAsWrittenToday()              // 오늘 작성 했음을 기록
+//        updateButtonState()                         // 버튼 상태 갱신(작성 완료 시 비활성화됨)
     }
     
     // MARK: - Gesture Actions
@@ -161,7 +181,6 @@ final class MainViewController: UIViewController {
 /// 작성화면 모달이 닫힐 때 처리.
 extension MainViewController: WriteViewControllerDelegate {
     func writeViewControllerDiddismiss() {
-        print("WriteViewController 모달이 닫혔습니다.")
         viewModel.reloadHangdam()   // 데이터 갱신
         viewModel.updateMessage()   // 메시지 업데이트
     }
