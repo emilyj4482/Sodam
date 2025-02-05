@@ -48,5 +48,5 @@ struct HangdamStatusView: View {
 
 #Preview {
     let hangdamRepository: HangdamRepository = HangdamRepository()
-    HangdamStatusView(size: CGSize(width: 402, height: 716), hangdam: .constant(hangdamRepository.getCurrentHangdam()))
+    HangdamStatusView(size: CGSize(width: 402, height: 716), hangdam: .constant(.init(id: "", name: "멍담이", happinessCount: 5, startDate: "2025-01-01", endDate: nil)))
 }

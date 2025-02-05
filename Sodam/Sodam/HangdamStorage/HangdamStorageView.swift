@@ -15,11 +15,15 @@ struct HangdamStorageView: View {
         NavigationStack {
             GeometryReader { geometry in
                 VStack(alignment: .center) {
-                    NavigationLink {
-                        HappinessListView(hangdam: $viewModel.currentHangdam.wrappedValue)
-                    } label: {
-                        HangdamStatusView(size: geometry.size, hangdam: $viewModel.currentHangdam)
-                            .clipShape(.rect(cornerRadius: 15))
+                    if let hangdam = viewModel.currentHangdam {
+                        NavigationLink {
+                            
+                            HappinessListView(hangdam: hangdam)
+                            
+                        } label: {
+                            HangdamStatusView(size: geometry.size, hangdam: $hangdam)
+                                .clipShape(.rect(cornerRadius: 15))
+                        }
                     }
                     
                     HStack(alignment: .bottom) {
@@ -29,14 +33,14 @@ struct HangdamStorageView: View {
                             .foregroundStyle(Color.textAccent)
                             .padding(.top)
                         
-                        Text("다 자란 행담이 : \($viewModel.storedHangdamList.wrappedValue.count)")
+                        Text("다 자란 행담이 : \(viewModel.storedHangdamList?.count ?? 0)")
                             .font(.mapoGoldenPier(15))
                             .foregroundStyle(Color.white)
                             .padding(.vertical, 7)
                             .padding(.horizontal, 12)
                             .background(Capsule().fill(Color.buttonBackground))
                     }
-                    if $viewModel.storedHangdamList.wrappedValue.count == 0 {
+                    if viewModel.storedHangdamList?.count == 0 {
                         VStack(alignment: .center) {
                             Spacer()
                             Text("행담이에게 행복을 주고 성장시켜보세요!")
@@ -65,7 +69,8 @@ struct HangdamStorageView: View {
                     if let tabBarController = getRootTabBarController() {
                         tabBarController.tabBar.isHidden = false
                     }
-                    viewModel.loadHangdamData()
+                    viewModel.fetchCurrentHangdam()
+                    viewModel.fetchHangdamList()
                 }
             }
         }

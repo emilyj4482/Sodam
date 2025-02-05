@@ -140,9 +140,9 @@ extension HappinessListView {
 extension HappinessListView {
     
 }
-
-#Preview {
-    let hangdamRepository: HangdamRepository = HangdamRepository()
-    HappinessListView(hangdam: hangdamRepository.getCurrentHangdam())
-}
-
+//
+//#Preview {
+//    let hangdamRepository: HangdamRepository = HangdamRepository()
+//    HappinessListView(hangdam: hangdamRepository.getCurrentHangdam())
+//}
+//
